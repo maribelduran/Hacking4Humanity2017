@@ -11,7 +11,7 @@ ShelterList.prototype.addShelter = function(name, wishlist, needs, website){
   this.shelters.push(new Shelter(name, wishlist, needs, website));
 }
 
-//Sorts shelters from highest to lowest based on number of items needed
+//Sorts shelters in decreasing order based on number of items needed
 ShelterList.prototype.sortShelters = function(){
   var filteredShelters = this.shelters.sort(function(s1, s2){
     return s1.needs.length > s2.needs.length;
@@ -33,10 +33,10 @@ function Shelter(name, wishlist, needs, website){
 
 /*********** Controller *********/
 var controller = {
- /*Will retrieve the items (as needs) from the url query string 
+ /*Will retrieve the items as needs from the url query string 
   and retrieve the shelters that need these items*/
   getShelterResults: function(){
-    var needs = view.getUrlVars();
+    var needs = view.getURLParamsAll("item");
     view.showSelectedNeeds(needs);
     controller.retrieveShelters(needs);
   },
@@ -106,23 +106,24 @@ var view = {
       FB.ui(this.fbShareDialogParams, function(response) {});
    }.bind(this));
   },
-  getUrlVars: function(){
+  getURLParamsAll: function(name){
   var vars = [], hash;
   var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
 
   for(var i = 0; i < hashes.length; i++){
     hash = hashes[i].split('=');
-    var item = decodeURIComponent(hash[1]).replace("+", " ");
-    vars.push(item);
+    if (hash[0] == name){
+     var item = decodeURIComponent(hash[1]).replace("+", " ");
+     vars.push(item);
+    }
   }
   return vars;
  },
  /*Creates elements to show shelters in each shelter-card.*/
  postShelters: function(shelter){
-  console.log("hello");
   var shelterList = document.getElementById("shelter-list");
+  //clear current elements in the shelter-list div
   shelterList.innerHTML = ""; 
-  console.log(shelter);
   shelter.forEach(function(s){
    
     var col_md_4 = document.createElement("div");
