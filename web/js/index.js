@@ -90,79 +90,67 @@ var view = {
 
 //Creates html elements to show needs in bootstrap rows.
  showNeeds: function(needs){
-  
- //displays to three needs
+  //displays top three needs in a separate bootstrap row
   var topThreeNeeds = document.getElementById("top-three-needs");
   topThreeNeeds.innerHTML = "";
 
-  needs.splice(0,3).forEach(function(item){
-    var name = titleCase(item);
-    var col_md_4 = document.createElement("div");
-    col_md_4.className = "col-md-4";
-    col_md_4.classList.add('col-xs-4');
-    topThreeNeeds.appendChild(col_md_4);
+  //displays the rest of the needs in another bootstrap row
+  var restofNeeds = document.getElementById("rest-of-needs");
+  restofNeeds.innerHTML = "";
 
+  needs.forEach(function(item, index){
+    //title case the item name
+    var name = titleCase(item);
+
+    //top three needs go in 3 columns
+    if (index <= 2){
+      var col_md_4 = document.createElement("div");
+      col_md_4.className = "col-md-4";
+      col_md_4.classList.add('col-xs-4');
+      topThreeNeeds.appendChild(col_md_4);
+    //the rest of needs go in 6 columns
+    }else{
+     var col_md_2 = document.createElement("div");
+     col_md_2.className = "col-md-2";
+     col_md_2.classList.add('col-sm-4', 'col-xs-6');
+     restofNeeds.appendChild(col_md_2);
+    }
+    //create input element of type checkbox
     var checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.id = name;
     checkbox.name = "item";
     checkbox.value = name;
-    col_md_4.appendChild(checkbox);
 
     var label = document.createElement("label");
     label.htmlFor = name;
-    col_md_4.appendChild(label);
 
     var img = document.createElement("img");
-    img.className = "img-check-main";
     //default value when item not found is currently gift-card.svg
     img.src = "icons/" + (this.svgIcon[name.toLowerCase()] || "gift-card.svg");
+
+    //append elements for top three needs
+   if (index <= 2){
+    col_md_4.appendChild(checkbox);
+    col_md_4.appendChild(label);
+    img.className = "img-check-main";
     label.appendChild(img); 
-
-    var p = document.createElement("p");
-    p.className = "caption";
-    p.innerHTML = name;
-    label.appendChild(p); 
+   }
+   //append elements for the rest of the needs
+   else{
+    col_md_2.appendChild(checkbox);
+    col_md_2.appendChild(label);
+    img.className = "img-check";
+    label.appendChild(img); 
+   }
+     
+   var p = document.createElement("p");
+   p.className = "caption";
+   p.innerHTML = name;
+   label.appendChild(p);
 
   }.bind(this));
-
-  //displays the rest of the needs
-  var restofNeeds = document.getElementById("rest-of-needs");
-  restofNeeds.innerHTML = "";
-  
-  needs.forEach(function(item){
-  
-  var name = titleCase(item);
-
-  var col_md_2 = document.createElement("div");
-  col_md_2.className = "col-md-2";
-  col_md_2.classList.add('col-sm-4', 'col-xs-6');
-  restofNeeds.appendChild(col_md_2);
-
-  var checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  checkbox.id = name;
-  checkbox.name = "item";
-  checkbox.value = name;
- // checkbox.class = "img-check";
-  col_md_2.appendChild(checkbox);
-
-  var label = document.createElement("label");
-  label.htmlFor = name;
-  col_md_2.appendChild(label);
-
-  var img = document.createElement("img");
-  img.className = "img-check";
-  img.src = "icons/" + (this.svgIcon[name.toLowerCase()] || "gift-card.svg");
-  label.appendChild(img); 
-
-
-  var p = document.createElement("p");
-  p.className = "caption";
-  p.innerHTML = name;
-  label.appendChild(p);
-  }.bind(this));
- }
+}
 };
 
 /*********** Global variables *********/
