@@ -1,145 +1,71 @@
 /*********** Model *********/
+var results = {
+  shelters: new ShelterList();
+}
 
-function shelterList(){
+function ShelterList(){
   this.shelters = [];
 }
 
-shelterList.prototype.addShelter = function(name, wishlist, needs, website){
-  this.shelters.push({
-      name: name,
-      wishlist: wishlist,
-      needs:needs,
-      website: website
-    });
+ShelterList.prototype.addShelter = function(name, wishlist, needs, website){
+  this.shelters.push(new Shelter(name, wishlist, needs, website));
 }
 
 //Sorts shelters from highest to lowest based on number of items needed
-shelterList.prototype.sortShelters = function(){
+ShelterList.prototype.sortShelters = function(){
   var filteredShelters = this.shelters.sort(function(s1, s2){
     return s1.needs.length > s2.needs.length;
-      //return s1.name.toLowerCase().localeCompare(s2.name.toLowerCase());
   });
   this.shelters.reverse();
+  return this.shelters;
 }
 
-/**** Will move to needs.js to propagate index.js needs list ***/
-function shelterApp(){
-  this.shelters = [];
-  this.needs = [];
-  this.facts = [];
+ShelterList.prototype.getShelters = function(){
+ return this.shelters;
 }
-function shelter(name, wishlist, needs, website){
+
+function Shelter(name, wishlist, needs, website){
   this.name = name;
   this.wishlist = wishlist;
   this.needs = needs;
   this.website = website;
 }
 
-shelterApp.prototype.addShelter = function(name, wishlist, needs, website){
-  var s = new shelter(name, wishlist, needs, website);
-  console.log(s);
-  this.shelters.push(s);
-}
-
-shelterApp.prototype.addNeeds = function(list){
-  list.forEach(function(need){
-      if (this.needs.indexOf(need) == -1){
-        this.needs.push(need);
-      }
-  }.bind(this));
-}
-
-var model = {
-  app: {},
-  initApp: function(){
-    this.app = new shelterApp();
-  }
-};
-
-
-/*********** Global functions *********/
-var findOne = function (haystack, arr) {
-  return arr.some(function (v) {
-    return haystack.indexOf(v) >= 0;
-    });
-};
-
-var capitalizeNeeds = function(needs){
-  var capitalizedWords =  needs.map(function(str){
-      return str.replace(/\b\w/g, function(l){ return l.toUpperCase() });
-  });
-  return capitalizedWords;
-}
-/*Parameters for the Share Dialog in Facebook SDk*/
-var fbShareDialogParams = {
-  method: 'share',
-  display: 'popup',
-  mobile_iframe: true,
-  href: 'http://www.maribelduran.com/Hacking4Humanity2017/web/index.html',
-  picture: 'https://raw.githubusercontent.com/maribelduran/Hacking4Humanity2017/master/web/images/EmpowerHerSF_square.png',
-  description: 'I am fighting against Human Trafficking by helping women shelters in SF. Come join the movement.',
-  caption: 'EMPOWERHER:SF',
-  quote: 'Be the change that you wish to see in the world.” -Gandhi',
-};
-
-
 /*********** Controller *********/
 var controller = {
-  initApp: function(){
-    model.initApp();
-    //this.getNeeds();
+ /*Will retrieve the items (as needs) from the url query string 
+  and retrieve the shelters that need these items*/
+  getShelterResults: function(){
+    var needs = view.getUrlVars();
+    view.showSelectedNeeds(needs);
+    controller.retrieveShelters(needs);
   },
-  getNeeds: function(){
-    //Update url to our github repository for this project
-    var url = 'http://www.maribelduran.com/twitch_streamers/js/ShelterDictionary.JSON';
-    var request = new XMLHttpRequest();
-    request.open('GET', url, true);
-    request.onload = function() {
-    if (request.status >= 200 && request.status < 400) { 
-      var shelters = JSON.parse(request.response);
-      shelters.forEach(function(obj){
-      var needs= obj["needs"];
-      model.app.addNeeds(needs);
-      });
-    }else{
-       // We reached our target server, but it returned an error   
-    }
-  };
-  request.onerror = function() {
-      // There was a connection error of some sort
-    };
-    request.send();
-  },
-  retrieveShelters: function(needs){
-    var list = new shelterList();
-     var requests = [];
-  requests.push(this.getShelters(needs).then(function(response){
+  retrieveShelters: function(userSelections){
+    var url = 'http://www.maribelduran.com/Hacking4Humanity2017/web/js/ShelterDictionary.JSON';
+    this.getRequest(userSelections, url).then(function(response){
       var shelters = JSON.parse(response);
       shelters.forEach(function(obj){
+        var shelterNeeds = capitalizeNeeds(obj.needs);
+        var userSelectedNeeds = capitalizeNeeds(userSelections);
         //check to see if there is at least one matching need 
-        if (findOne(obj.needs, needs)){
-          //finds the interescting needs
-          var commonNeeds = needs.filter(function(n){
-              return obj.needs.indexOf(n) !== -1;
+        if (findOne(shelterNeeds, userSelectedNeeds)){
+          // if there as least one matching need, find the interescting needs
+          var commonNeeds = userSelectedNeeds.filter(function(n){
+              return shelterNeeds.indexOf(n) !== -1;
           });
-          list.addShelter(obj.shelter, obj.wishList, commonNeeds, obj.website);
+          results.shelters.addShelter(obj.shelter, obj.wishList, commonNeeds, obj.website);
         }
       });
+      //sort and show shelters
+       results.shelters.sortShelters(); 
+       var shelterList = results.shelters.sortShelters(); 
+       view.postShelters(shelterList);
     },function(error) {
-        console.error("Failed!", error);
-    }))
-
-  Promise.all(requests).then(function(results) {
-    list.sortShelters(); 
-    this.postShelters(list.shelters);
-  }.bind(this)).catch(function(error) {
-  // One or more promises was rejected
-  }.bind(this));
+      console.error("Failed!", error);
+    })
   },
-  getShelters: function(needs){
+  getRequest:function(needs, url){
     return new Promise(function(resolve,reject){
-    //Update url to our github repository for this project
-    var url = 'http://www.maribelduran.com/Hacking4Humanity2017/web/js/ShelterDictionary.JSON';
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
     request.onload = function() {
@@ -147,7 +73,7 @@ var controller = {
         resolve(request.response);
       }else{
         if (request.status == 404){
-           resolve(request.response); //resolving an invalid user because we still want to add each username to our list of users
+           resolve(request.response);
         }
         reject(Error(request.statusText)); // We reached our target server, but it returned an error
        }
@@ -157,13 +83,46 @@ var controller = {
       };
     request.send();
  });
-},
+}
+};
 
-/*Creates elements to show shelters in each shelter-card.*/
-postShelters: function(shelter){
+
+/*********** View *********/
+var view = {
+  /*Parameters for the Share Dialog in Facebook SDk*/
+  fbShareDialogParams: {
+    method: 'share',
+    display: 'popup',
+    mobile_iframe: true,
+    href: 'http://www.maribelduran.com/Hacking4Humanity2017/web/index.html',
+    picture: 'https://raw.githubusercontent.com/maribelduran/Hacking4Humanity2017/master/web/images/EmpowerHerSF_square.png',
+    description: 'I am fighting against Human Trafficking by helping women shelters in SF. Come join the movement.',
+    caption: 'EMPOWERHER:SF',
+    quote: 'Be the change that you wish to see in the world.” -Gandhi',
+ },
+  setUpEventListeners: function(){
+   var btn_share_fb=document.getElementById("btn-share-fb");
+   btn_share_fb.addEventListener("click", function(){
+      FB.ui(this.fbShareDialogParams, function(response) {});
+   }.bind(this));
+  },
+  getUrlVars: function(){
+  var vars = [], hash;
+  var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+
+  for(var i = 0; i < hashes.length; i++){
+    hash = hashes[i].split('=');
+    var item = decodeURIComponent(hash[1]).replace("+", " ");
+    vars.push(item);
+  }
+  return vars;
+ },
+ /*Creates elements to show shelters in each shelter-card.*/
+ postShelters: function(shelter){
+  console.log("hello");
   var shelterList = document.getElementById("shelter-list");
   shelterList.innerHTML = ""; 
-
+  console.log(shelter);
   shelter.forEach(function(s){
    
     var col_md_4 = document.createElement("div");
@@ -198,8 +157,7 @@ postShelters: function(shelter){
 
     var p = document.createElement("p");
     var needStr = "";
-    var capitalizedNeeds = capitalizeNeeds(s.needs);
-    capitalizedNeeds.forEach(function(item){
+    s.needs.forEach(function(item){
         needStr += item + ", ";
     });
     p.innerHTML = "Needs: " + needStr.substr(0,needStr.length-2);
@@ -215,43 +173,31 @@ postShelters: function(shelter){
  });
 },
 showSelectedNeeds: function(needs){
-	if( needs[0] !== "undefined" && needs[0] !== undefined){
-    document.getElementById("shelterNeedsSelection").innerHTML = capitalizeNeeds(needs).join(', ');
+  if( needs[0] !== "undefined" && needs[0] !== undefined){
+    document.getElementById("shelterNeedsSelection").innerHTML = needs.join(', ');
   }else{
-  	 document.getElementById("description").innerHTML = "You did not select any items.";
+     document.getElementById("description").innerHTML = "You did not select any items.";
   }
  }
 };
 
-function getUrlVars(){
-  var vars = [], hash;
-  var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
-
-  for(var i = 0; i < hashes.length; i++){
-    hash = hashes[i].split('=');
-    var item = decodeURIComponent(hash[1]).replace("+", " ");
-    vars.push(item);
-  }
-  return vars;
-}
-
-/*********** View *********/
-var view = {
-  setUpEventListeners: function(){
-   var btn_share_fb=document.getElementById("btn-share-fb");
-   btn_share_fb.addEventListener("click", function(){
-      FB.ui(fbShareDialogParams, function(response) {});
+/*********** Global functions *********/
+var findOne = function (haystack, arr) {
+  return arr.some(function (v) {
+    return haystack.indexOf(v) >= 0;
     });
-  }
 };
 
-/*********** Initializating Results.HTML *********/
-controller.initApp();
-view.setUpEventListeners();
-var needs = getUrlVars();
-controller.showSelectedNeeds(needs);
-controller.retrieveShelters(needs);
+var capitalizeNeeds = function(needs){
+  var titledCase =  needs.map(function(str){
+      return str.replace(/\b\w/g, function(l){ return l.toUpperCase() });
+  });
+  return titledCase;
+}
 
+/*********** Runs when document is ready *********/
 $(document).ready(function () {
-   $("#myModal").modal("show");
+  controller. getShelterResults();
+  view.setUpEventListeners();
+  $("#myModal").modal("show");
 });
