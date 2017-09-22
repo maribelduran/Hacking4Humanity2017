@@ -1,6 +1,6 @@
 /*********** Model *********/
 var results = {
-  shelters: new ShelterList();
+  shelters: new ShelterList()
 }
 
 function ShelterList(){
