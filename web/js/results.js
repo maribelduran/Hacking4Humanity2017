@@ -41,7 +41,7 @@ var controller = {
     controller.retrieveShelters(needs);
   },
   retrieveShelters: function(userSelections){
-    var url = 'http://www.maribelduran.com/Hacking4Humanity2017/web/js/ShelterDictionary.JSON';
+    var url = 'https://www.maribelduran.com/Hacking4Humanity2017/web/js/ShelterDictionary.JSON';
     this.getRequest(userSelections, url).then(function(response){
       var shelters = JSON.parse(response);
       shelters.forEach(function(obj){
@@ -94,7 +94,7 @@ var view = {
     method: 'share',
     display: 'popup',
     mobile_iframe: true,
-    href: 'http://www.maribelduran.com/Hacking4Humanity2017/web/index.html',
+    href: 'https://www.maribelduran.com/Hacking4Humanity2017/web/index.html',
     picture: 'https://raw.githubusercontent.com/maribelduran/Hacking4Humanity2017/master/web/images/EmpowerHerSF_square.png',
     description: 'I am fighting against Human Trafficking by helping women shelters in SF. Come join the movement.',
     caption: 'EMPOWERHER:SF',
