@@ -37,7 +37,7 @@ var controller = {
     this.getNeeds();
   },
   getNeeds: function(){
-    var url = 'http://www.maribelduran.com/Hacking4Humanity2017/web/js/ShelterDictionary.JSON';
+    var url = 'https://www.maribelduran.com/Hacking4Humanity2017/web/js/ShelterDictionary.JSON';
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
     request.onload = function() {
