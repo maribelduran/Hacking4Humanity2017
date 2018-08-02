@@ -42,7 +42,7 @@ var controller = {
   },
   retrieveShelters: function(userSelections) {
     var url =
-      "https://maribelduran.github.io//Hacking4Humanity2017/web/js/ShelterDictionary.JSON";
+      "https://maribelduran.github.io/Hacking4Humanity2017/web/js/ShelterDictionary.JSON";
     this.getRequest(userSelections, url).then(
       function(response) {
         var shelters = JSON.parse(response);
